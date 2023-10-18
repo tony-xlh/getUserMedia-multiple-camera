@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Multiple Camera Simple Example</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <script type="module">
+      import { defineCustomElements } from 'https://cdn.jsdelivr.net/npm/camera-preview-component/dist/esm/loader.js';
+      defineCustomElements();
+    </script>
+    <style>
+      camera-preview {
+        max-width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <camera-preview id="camera1"></camera-preview>
+    <camera-preview id="camera2"></camera-preview>
+    <script>
+      var cameras;
+      window.onload = async function(){
+        cameras = await document.getElementById("camera1").getAllCameras();
+        for (let index = 0; index < 2; index++) {
+          var camComponent = document.getElementById("camera"+(index+1));
+          const onOpened = async () => {
+            console.log("opened");
+            var video = await getComponent(index).getVideoElement();
+            getComponent(index).style.width = video.videoWidth + "px";
+            getComponent(index).style.height = video.videoHeight + "px";
+          }
+          const onClosed = () => {
+            console.log("closed");
+          }
+          camComponent.addEventListener("opened",onOpened);
+          camComponent.addEventListener("closed",onClosed);
+          camComponent.desiredCamera = cameras[index].label;
+          camComponent.active = true;  
+        }
+      }
+
+      function getComponent(index) {
+        return document.getElementById("camera"+(index+1));
+      }
+    </script>
+  </body>
+</html>
