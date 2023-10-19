@@ -16,16 +16,44 @@
     </style>
   </head>
   <body>
+    <label>
+      Camera 1:
+      <select id="select-camera-1"></select>
+    </label>
+    <label>
+      Camera 2:
+      <select id="select-camera-2"></select>
+    </label>
     <camera-preview id="camera1"></camera-preview>
     <camera-preview id="camera2"></camera-preview>
+    <button id="btn-open-camera">Open Cameras</button>
     <script>
-      var cameras;
+      var devices;
+      var camSelect1 = document.getElementById("select-camera-1");
+      var camSelect2 = document.getElementById("select-camera-2");
+
       window.onload = async function(){
-        cameras = await document.getElementById("camera1").getAllCameras();
+        await listDevices();
+      }
+
+      async function listDevices(){
+        devices = await document.getElementById("camera1").getAllCameras();
+        for (let index = 0; index < devices.length; index++) {
+          const device = devices[index];
+          camSelect1.appendChild(new Option(device.label ?? "Camera "+index,device.deviceId));
+          camSelect2.appendChild(new Option(device.label ?? "Camera "+index,device.deviceId));
+        }
+        camSelect2.selectedIndex = 1;
+      }
+
+      function getComponent(index) {
+        return document.getElementById("camera"+(index+1));
+      }
+
+      document.getElementById("btn-open-camera").addEventListener("click",function(){
         for (let index = 0; index < 2; index++) {
           var camComponent = document.getElementById("camera"+(index+1));
           const onOpened = async () => {
-            console.log("opened");
             var video = await getComponent(index).getVideoElement();
             getComponent(index).style.width = video.videoWidth + "px";
             getComponent(index).style.height = video.videoHeight + "px";
@@ -35,14 +63,14 @@
           }
           camComponent.addEventListener("opened",onOpened);
           camComponent.addEventListener("closed",onClosed);
-          camComponent.desiredCamera = cameras[index].label;
+          if (index === 0) {
+            camComponent.desiredCamera = camSelect1.selectedOptions[0].label;
+          }else{
+            camComponent.desiredCamera = camSelect2.selectedOptions[0].label;
+          }
           camComponent.active = true;  
         }
-      }
-
-      function getComponent(index) {
-        return document.getElementById("camera"+(index+1));
-      }
+      });
     </script>
   </body>
 </html>
