@@ -82,6 +82,11 @@
         updateVideoContainer(this);
       })
 
+      document.addEventListener("resize", (event) => {
+        updateVideoContainer(document.getElementById("camera1"));
+        updateVideoContainer(document.getElementById("camera2"));
+      });
+
       function updateVideoContainer(video){
         var overlay = video.nextElementSibling;
         video.parentElement.style.height = video.clientHeight + "px";
