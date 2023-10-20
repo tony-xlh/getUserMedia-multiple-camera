@@ -48,7 +48,7 @@
         .container {
           flex-direction: column;
         }
-        
+
         .left {
           width: 100%;
         }
@@ -91,6 +91,15 @@
       <div class="right">
         Results:
         <table>
+          <thead>
+            <tr>
+              <th>Camera 1</th>
+              <th>Camera 2</th>
+              <th>Barcodes</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
         </table>
       </div>
     </div>
@@ -156,8 +165,11 @@
               video = document.getElementById("camera2");
             }
             var results = await scanner.decode(video);
-            drawOverlay(results,video);
             console.log(results);
+            drawOverlay(results,video);
+            if (results.length>0) {
+              appendRecord(results);
+            }
           } catch (error) {
             console.log(error);
           }
@@ -256,6 +268,54 @@
           alert('Unable to capture your camera. Please check console logs.');
           console.error(error);
         });
+      }
+
+      function captureFrame(canvas,video){
+        var w = video.videoWidth;
+        var h = video.videoHeight;
+        canvas.width  = w;
+        canvas.height = h;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, w, h);
+        return canvas.toDataURL();
+      }
+
+      function appendRecord(results){
+        var cam1 = document.getElementById("camera1");
+        var cam2 = document.getElementById("camera2");
+        var cvs = document.createElement("canvas");
+        var imgDataURL1 = captureFrame(cvs,cam1);
+        var imgDataURL2 = captureFrame(cvs,cam2);
+        var row = document.createElement("tr");
+        var cell1 = document.createElement("td");
+        var cell2 = document.createElement("td");
+        var cell3 = document.createElement("td");
+        var cell4 = document.createElement("td");
+        var img1 = document.createElement("img");
+        img1.src = imgDataURL1;
+        cell1.appendChild(img1);
+        var img2 = document.createElement("img");
+        img2.src = imgDataURL2;
+        cell2.appendChild(img2);
+        cell3.innerText = barcodeResultsString(results);
+        cell4.innerText = (new Date()).toLocaleString();
+        row.appendChild(cell1);
+        row.appendChild(cell2);
+        row.appendChild(cell3);
+        row.appendChild(cell4);
+        document.querySelector("tbody").appendChild(row);
+      }
+
+      function barcodeResultsString(results){
+        var s = "";
+        for (let index = 0; index < results.length; index++) {
+          const result = results[index];
+          s = result.barcodeFormatString + ": " + result.barcodeText;
+          if (index != results.length - 1) {
+            s = s + "\n";
+          }
+        }
+        return s;
       }
     </script>
   </body>
