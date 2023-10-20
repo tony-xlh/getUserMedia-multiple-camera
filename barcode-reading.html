@@ -33,35 +33,54 @@
         stroke:green;
         stroke-width:5;
       }
+
+      .container {
+        display: flex;
+      }
+      .left {
+        width: 60%;
+      }
+      .right {
+        width: 40%;
+      }
     </style>
   </head>
   <body>
-    <div>
-      <label>
-        Camera 1:
-        <select id="select-camera-1"></select>
-      </label>
-      <label>
-        Camera 2:
-        <select id="select-camera-2"></select>
-      </label>
+    <div class="container">
+      <div class="left">
+        <div>
+          <label>
+            Camera 1:
+            <select id="select-camera-1"></select>
+          </label>
+          <label>
+            Camera 2:
+            <select id="select-camera-2"></select>
+          </label>
+        </div>
+        <div class="video-container">
+          <video id="camera1" class="absolute" controls autoplay playsinline></video>
+          <svg class="absolute" version="1.1" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
+        <div class="video-container">
+          <video id="camera2" class="absolute" controls autoplay playsinline></video>
+          <svg class="absolute" version="1.1" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
+        <label>
+          Camera for reading barcodes:
+          <select id="cam-for-decoding">
+            <option selected>Camera 1</option>
+            <option>Camera 2</option>
+          </select>
+        </label>
+        <button id="btn-open-camera">Open Cameras</button>
+      </div>
+      <div class="right">
+        Results:
+        <table>
+        </table>
+      </div>
     </div>
-    <div class="video-container">
-      <video id="camera1" class="absolute" controls autoplay playsinline></video>
-      <svg class="absolute" version="1.1" xmlns="http://www.w3.org/2000/svg"></svg>
-    </div>
-    <div class="video-container">
-      <video id="camera2" class="absolute" controls autoplay playsinline></video>
-      <svg class="absolute" version="1.1" xmlns="http://www.w3.org/2000/svg"></svg>
-    </div>
-    <label>
-      Camera for reading barcodes:
-      <select id="cam-for-decoding">
-        <option selected>Camera 1</option>
-        <option>Camera 2</option>
-      </select>
-    </label>
-    <button id="btn-open-camera">Open Cameras</button>
     <script>
       var devices;
       var camSelect1 = document.getElementById("select-camera-1");
@@ -82,7 +101,7 @@
         updateVideoContainer(this);
       })
 
-      document.addEventListener("resize", (event) => {
+      addEventListener("resize", (event) => {
         updateVideoContainer(document.getElementById("camera1"));
         updateVideoContainer(document.getElementById("camera2"));
       });
@@ -90,8 +109,8 @@
       function updateVideoContainer(video){
         var overlay = video.nextElementSibling;
         video.parentElement.style.height = video.clientHeight + "px";
-        overlay.setAttribute("width",video.clientWidth);
-        overlay.setAttribute("height",video.clientHeight);
+        overlay.style.width = video.clientWidth + "px";
+        overlay.style.height = video.clientHeight + "px";
         overlay.setAttribute("viewBox","0 0 "+video.videoWidth+" "+video.videoHeight);
       }
 
