@@ -111,6 +111,7 @@
       var scanner;
       var interval;
       var decoding = false;
+      var lastRecord;
       window.onload = async function(){
         await listDevices()
         await initDBR();
@@ -169,13 +170,39 @@
             console.log(results);
             drawOverlay(results,video);
             if (results.length>0) {
-              appendRecord(results);
+              if (checkDuplication(results[0]) === false) {
+                appendRecord(results);
+              }
             }
           } catch (error) {
             console.log(error);
           }
           decoding = false;
         }
+      }
+
+      function checkDuplication(result){
+        if (!lastRecord) {
+          lastRecord = {result:result,date:new Date()};
+          return false;
+        }
+        if (duplicated(result)){
+          return true;
+        }
+        lastRecord = {result:result,date:new Date()};
+        return false;
+      }
+
+      function duplicated(result) {
+        if (result.barcodeText === lastRecord.result.barcodeText) {
+          var timeDiff = (new Date()).getTime() - lastRecord.date.getTime();
+          console.log("timeDiff");
+          console.log(timeDiff);
+          if (timeDiff < 5*1000) {
+            return true;
+          }
+        }
+        return false;
       }
 
       function drawOverlay(results,video){
