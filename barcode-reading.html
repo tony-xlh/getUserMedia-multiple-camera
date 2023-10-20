@@ -7,6 +7,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <script src="https://cdn.jsdelivr.net/npm/dynamsoft-javascript-barcode@9.6.31/dist/dbr.js"></script>
     <style>
+      video,svg {
+        max-width: 100%;
+      }
+
+      .video-container {
+        position: relative;
+        height: 150px;
+      }
+      
+      .absolute {
+        position: absolute;
+        top: 0px;
+        left: 0px;
+      }
+
+      .barcode-polygon {
+        fill:rgba(85,240,40,0);          
+        stroke:green;
+        stroke-width:5;
+      }
+          
+      .barcode-polygon:hover {
+        fill:rgba(85,240,40,0.5);
+        stroke:green;
+        stroke-width:5;
+      }
     </style>
   </head>
   <body>
@@ -20,11 +46,13 @@
         <select id="select-camera-2"></select>
       </label>
     </div>
-    <div>
-      <video id="camera1" controls autoplay playsinline></video>
+    <div class="video-container">
+      <video id="camera1" class="absolute" controls autoplay playsinline></video>
+      <svg class="absolute" version="1.1" xmlns="http://www.w3.org/2000/svg"></svg>
     </div>
-    <div>
-      <video id="camera2" controls autoplay playsinline></video>
+    <div class="video-container">
+      <video id="camera2" class="absolute" controls autoplay playsinline></video>
+      <svg class="absolute" version="1.1" xmlns="http://www.w3.org/2000/svg"></svg>
     </div>
     <label>
       Camera for reading barcodes:
@@ -44,6 +72,22 @@
       window.onload = async function(){
         await listDevices()
         await initDBR();
+      }
+
+      document.getElementById("camera1").addEventListener("loadeddata",function(){
+        updateVideoContainer(this);
+      })
+
+      document.getElementById("camera2").addEventListener("loadeddata",function(){
+        updateVideoContainer(this);
+      })
+
+      function updateVideoContainer(video){
+        var overlay = video.nextElementSibling;
+        video.parentElement.style.height = video.clientHeight + "px";
+        overlay.setAttribute("width",video.clientWidth);
+        overlay.setAttribute("height",video.clientHeight);
+        overlay.setAttribute("viewBox","0 0 "+video.videoWidth+" "+video.videoHeight);
       }
 
       async function initDBR(){
@@ -75,12 +119,37 @@
               video = document.getElementById("camera2");
             }
             var results = await scanner.decode(video);
+            drawOverlay(results,video);
             console.log(results);
           } catch (error) {
             console.log(error);
           }
           decoding = false;
         }
+      }
+
+      function drawOverlay(results,video){
+        var overlay = video.nextElementSibling;
+        overlay.innerHTML = "";
+        for (let index = 0; index < results.length; index++) {
+          const result = results[index];
+          var points = getPointsData(result.localizationResult);
+          var polygon = document.createElementNS("http://www.w3.org/2000/svg","polygon");
+          polygon.setAttribute("points",points);
+          polygon.setAttribute("class","barcode-polygon");
+          var title = document.createElementNS("http://www.w3.org/2000/svg","title");
+          title.textContent = result.barcodeText;
+          polygon.append(title);
+          overlay.append(polygon);
+        }
+      }
+
+      function getPointsData(lr){
+          var pointsData = lr.x1+","+lr.y1 + " ";
+          pointsData = pointsData+ lr.x2+","+lr.y2 + " ";
+          pointsData = pointsData+ lr.x3+","+lr.y3 + " ";
+          pointsData = pointsData+ lr.x4+","+lr.y4;
+          return pointsData;
       }
 
       async function listDevices(){
