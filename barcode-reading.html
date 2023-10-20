@@ -38,10 +38,14 @@
         display: flex;
       }
       .left {
-        width: 60%;
+        width: 40%;
       }
       .right {
-        width: 40%;
+        width: 60%;
+      }
+
+      table img {
+        width: 100px;
       }
 
       @media screen and (max-device-width: 600px){
@@ -86,8 +90,10 @@
             <option>Camera 2</option>
           </select>
         </label>
-        <button id="btn-open-camera">Open Cameras</button>
-        <button id="btn-close-camera">Close Cameras</button>
+        <div>
+          <button id="btn-open-camera">Open Cameras</button>
+          <button id="btn-close-camera">Close Cameras</button>  
+        </div>
       </div>
       <div class="right">
         Results:
