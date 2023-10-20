@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Multiple Camera Simple Example</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <script src="https://cdn.jsdelivr.net/npm/dynamsoft-javascript-barcode@9.6.31/dist/dbr.js"></script>
+    <style>
+    </style>
+  </head>
+  <body>
+    <div>
+      <label>
+        Camera 1:
+        <select id="select-camera-1"></select>
+      </label>
+      <label>
+        Camera 2:
+        <select id="select-camera-2"></select>
+      </label>
+    </div>
+    <div>
+      <video id="camera1" controls autoplay playsinline></video>
+    </div>
+    <div>
+      <video id="camera2" controls autoplay playsinline></video>
+    </div>
+    <label>
+      Camera for reading barcodes:
+      <select id="cam-for-decoding">
+        <option selected>Camera 1</option>
+        <option>Camera 2</option>
+      </select>
+    </label>
+    <button id="btn-open-camera">Open Cameras</button>
+    <script>
+      var devices;
+      var camSelect1 = document.getElementById("select-camera-1");
+      var camSelect2 = document.getElementById("select-camera-2");
+      var scanner;
+      var interval;
+      var decoding = false;
+      window.onload = async function(){
+        await listDevices()
+        await initDBR();
+      }
+
+      async function initDBR(){
+        Dynamsoft.DBR.BarcodeScanner.license = 'DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ=='; //one-day public trial
+        scanner = await Dynamsoft.DBR.BarcodeScanner.createInstance();
+      }
+
+      function startScanning(){
+        stopScanning();
+        interval = setInterval(captureAndDecode,200);
+      }
+
+      function stopScanning(){
+        if (interval) {
+          clearInterval(interval);
+          interval = undefined;
+        }
+        decoding = false;
+      }
+
+      async function captureAndDecode(){
+        if (decoding === false) {
+          decoding = true;
+          try {
+            let video;
+            if (document.getElementById("cam-for-decoding").selectedIndex === 0) {
+              video = document.getElementById("camera1");
+            } else {
+              video = document.getElementById("camera2");
+            }
+            var results = await scanner.decode(video);
+            console.log(results);
+          } catch (error) {
+            console.log(error);
+          }
+          decoding = false;
+        }
+      }
+
+      async function listDevices(){
+        devices = await getCameraDevices()
+        for (let index = 0; index < devices.length; index++) {
+          const device = devices[index];
+          camSelect1.appendChild(new Option(device.label ?? "Camera "+index,device.deviceId));
+          camSelect2.appendChild(new Option(device.label ?? "Camera "+index,device.deviceId));
+        }
+        camSelect2.selectedIndex = 1;
+      }
+
+      async function getCameraDevices(){
+        await askForPermissions();
+        var allDevices = await navigator.mediaDevices.enumerateDevices();
+        var cameraDevices = [];
+        for (var i=0;i<allDevices.length;i++){
+          var device = allDevices[i];
+          if (device.kind == 'videoinput'){
+            cameraDevices.push(device);
+          }
+        }
+        return cameraDevices;
+      }
+
+      async function askForPermissions(){
+        var stream;
+        try {
+          var constraints = {video: true, audio: false}; //ask for camera permission
+          stream = await navigator.mediaDevices.getUserMedia(constraints);  
+        } catch (error) {
+          console.log(error);
+        }
+        closeStream(stream);
+      }
+
+      function closeStream(stream){
+        try{
+          if (stream){
+            stream.getTracks().forEach(track => track.stop());
+          }
+        } catch (e){
+          alert(e.message);
+        }
+      }
+
+      document.getElementById("btn-open-camera").addEventListener("click",function(){
+        captureCamera(document.getElementById("camera1"),camSelect1.selectedOptions[0].value);
+        captureCamera(document.getElementById("camera2"),camSelect2.selectedOptions[0].value);
+        startScanning();
+      });
+
+      function captureCamera(video, selectedCamera) {
+        var constraints = {
+          audio:false,
+          video:true
+        }
+        if (selectedCamera) {
+          constraints = {
+            video: {deviceId: selectedCamera},
+            audio: false
+          }
+        }
+        navigator.mediaDevices.getUserMedia(constraints).then(function(camera) {
+          video.srcObject = camera;
+        }).catch(function(error) {
+          alert('Unable to capture your camera. Please check console logs.');
+          console.error(error);
+        });
+      }
+    </script>
+  </body>
+</html>
