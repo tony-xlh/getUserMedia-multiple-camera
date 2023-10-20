@@ -87,6 +87,7 @@
           </select>
         </label>
         <button id="btn-open-camera">Open Cameras</button>
+        <button id="btn-close-camera">Close Cameras</button>
       </div>
       <div class="right">
         Results:
@@ -249,6 +250,12 @@
         captureCamera(document.getElementById("camera1"),camSelect1.selectedOptions[0].value);
         captureCamera(document.getElementById("camera2"),camSelect2.selectedOptions[0].value);
         startScanning();
+      });
+
+      document.getElementById("btn-close-camera").addEventListener("click",function(){
+        stopScanning();
+        closeStream(document.getElementById("camera1").srcObject);
+        closeStream(document.getElementById("camera2").srcObject);
       });
 
       function captureCamera(video, selectedCamera) {
