@@ -6,6 +6,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <script src="https://cdn.jsdelivr.net/npm/dynamsoft-javascript-barcode@9.6.31/dist/dbr.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js"></script>
     <style>
       video,svg {
         max-width: 100%;
@@ -67,6 +68,43 @@
           width: 100%;
         }
       }
+
+      .query-modal {
+        position:fixed;
+        left: 20px;
+        top: 20px;
+        width: calc(100% - 40px);
+        height: calc(100% - 40px);
+        border: 1px solid gray;
+        border-radius: 5px;
+        background: white;
+        padding: 5px;
+        z-index: 9999;
+        display: none;
+      }
+
+      .query-modal img {
+        max-height: 100px;
+      }
+
+      .modal-header {
+        height: 25px;
+      }
+
+      .modal-body {
+        height: calc(100% - 25px);
+        overflow: auto;
+      }
+
+      .modal-body li {
+        margin-bottom: 1em;
+        border-bottom: 1px solid gray;
+      }
+
+      #btn-modal-close {
+        float: right;
+        margin-right: 5px;
+      }
     </style>
   </head>
   <body>
@@ -101,8 +139,15 @@
           <button id="btn-open-camera">Open Cameras</button>
           <button id="btn-close-camera">Close Cameras</button>  
         </div>
+        <div>
+          <label>
+            Save to IndexedDB:
+            <input type="checkbox" id="save-to-indexedDB" checked/>
+          </label>
+          <button id="btn-show-query">Query Records</button>
+        </div>
       </div>
-      <div class="right">
+      <div class="right-close-btn">
         Results:
         <table>
           <thead>
@@ -116,6 +161,18 @@
           <tbody></tbody>
         </table>
       </div>
+      <div class="query-modal">
+        <div class="modal-header">
+          <label>
+            Barcode:
+            <input type="text" id="input-query"/>
+          </label>
+          <button id="btn-query">Query</button>
+          <div id="btn-modal-close">x</div>
+        </div>
+        <div class="modal-body">
+        </div>
+      </div>
     </div>
     <script>
       var devices;
@@ -125,6 +182,10 @@
       var interval;
       var decoding = false;
       var lastRecord;
+      var recordStore = localforage.createInstance({
+        name: "record"
+      });
+      
       window.onload = async function(){
         await listDevices()
         await initDBR();
@@ -298,6 +359,47 @@
         closeStream(document.getElementById("camera2").srcObject);
       });
 
+      document.getElementById("btn-show-query").addEventListener("click",function(){
+        document.getElementsByClassName("query-modal")[0].style.display = "block";
+      });
+
+      document.getElementById("btn-modal-close").addEventListener("click",function(){
+        document.getElementsByClassName("modal-body")[0].innerHTML = "";
+        document.getElementsByClassName("query-modal")[0].style.display = "none";
+      })
+
+      document.getElementById("btn-query").addEventListener("click",function(){
+        queryRecord();
+      });
+
+      async function queryRecord(){
+        var key = document.getElementById("input-query").value;
+        var records = await recordStore.getItem(key);
+        if (records) {
+          console.log(records);
+          var modalBody = document.getElementsByClassName("modal-body")[0];
+          var orderedList = document.createElement("ol");
+          for (var index = 0; index < records.length; index++) {
+            var record = records[index];
+            var item = document.createElement("li");
+            var img1 = document.createElement("img");
+            var img2 = document.createElement("img");
+            img1.src = record.img1;
+            img2.src = record.img2;
+            var text = document.createElement("div");
+            text.innerText = "Barcode: "+record.text;
+            var date = document.createElement("div");
+            date.innerText = "Date: "+record.date;
+            item.appendChild(img1);
+            item.appendChild(img2);
+            item.appendChild(text);
+            item.appendChild(date);
+            orderedList.appendChild(item);
+          }
+          modalBody.appendChild(orderedList);
+        }
+      }
+
       function captureCamera(video, selectedCamera) {
         var constraints = {
           audio:false,
@@ -345,12 +447,25 @@
         img2.src = imgDataURL2;
         cell2.appendChild(img2);
         cell3.innerText = barcodeResultsString(results);
-        cell4.innerText = (new Date()).toLocaleString();
+        var date = new Date();
+        cell4.innerText = date.toLocaleString();
         row.appendChild(cell1);
         row.appendChild(cell2);
         row.appendChild(cell3);
         row.appendChild(cell4);
         document.querySelector("tbody").appendChild(row);
+        if (document.getElementById("save-to-indexedDB").checked) {
+          saveRecord(imgDataURL1,imgDataURL2,results[0].barcodeText,date.getTime())
+        }
+      }
+
+      async function saveRecord(img1,img2,barcodeText,timestamp){
+        let existingRecords = await recordStore.getItem(barcodeText);
+        if (!existingRecords) {
+          existingRecords = [];
+        }
+        existingRecords.push({img1:img1,img2:img2,text:barcodeText,date:timestamp});
+        await recordStore.setItem(barcodeText,existingRecords);
       }
 
       function barcodeResultsString(results){
