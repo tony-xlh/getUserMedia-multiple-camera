@@ -119,6 +119,15 @@
             Camera 2:
             <select id="select-camera-2"></select>
           </label>
+          <label>
+            Desired resolution:
+            <select id="select-resolution">
+              <option selected>640x480</option>
+              <option>1280x720</option>
+              <option>1920x1080</option>
+              <option>3840x2160</option>
+            </select>
+          </label>
         </div>
         <div class="video-container">
           <video id="camera1" class="absolute" controls autoplay playsinline></video>
@@ -411,6 +420,16 @@
             audio: false
           }
         }
+        var resolution = document.getElementById("select-resolution").selectedOptions[0].label;
+        let desiredWidth = resolution.split("x")[0];
+        let desiredHeight = resolution.split("x")[1];
+        if (constraints["video"]["deviceId"]) {
+          constraints["video"]["width"] = desiredWidth;
+          constraints["video"]["height"] = desiredHeight;
+        }else{
+          constraints = {width:desiredWidth,height:desiredHeight};
+        }
+        
         navigator.mediaDevices.getUserMedia(constraints).then(function(camera) {
           video.srcObject = camera;
         }).catch(function(error) {
