@@ -22,6 +22,7 @@ Barcode scanner demo video:
 
 
 
-https://github.com/tony-xlh/getUserMedia-multiple-camera/assets/112376616/396d50b7-c655-4c8b-8f9d-980426d0bb0f
+https://github.com/tony-xlh/getUserMedia-multiple-camera/assets/5462205/2300485d-fceb-48ac-9379-e98a7844a56f
+
 
 
