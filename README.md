@@ -11,3 +11,12 @@ Demos:
 )
 * [Barcode Scanner using two cameras](https://tony-xlh.github.io/getUserMedia-multiple-camera/barcode-reading.html
 )
+
+## Requirements
+
+You need localhost or HTTPS to have the camera permission.
+
+You cannot open two cameras with `getUserMedia` at the same time on Android and iOS.
+
+The demo works fine on PC devices.
+
