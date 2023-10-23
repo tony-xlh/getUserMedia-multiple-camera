@@ -398,7 +398,8 @@
             var text = document.createElement("div");
             text.innerText = "Barcode: "+record.text;
             var date = document.createElement("div");
-            date.innerText = "Date: "+record.date;
+            var dateObject = new Date(parseInt(record.date))
+            date.innerText = "Date: "+dateObject.toLocaleString();
             item.appendChild(img1);
             item.appendChild(img2);
             item.appendChild(text);
